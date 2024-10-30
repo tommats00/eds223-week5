@@ -1,0 +1,61 @@
+---
+title: "Week 5 Discussion"
+author: "Tom Gibbens-Matsuyama"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(terra)
+library(spData)
+library(spDataLarge)
+library(tmap)
+```
+
+```{r}
+# Load raster data representing grain sizes with the three classes clay, silt and sand
+grain <- terra::rast(system.file("raster/grain.tif", package = "spData"))
+```
+
+```{r}
+tm_shape(grain) +
+  tm_raster()
+```
+
+```{r}
+# Filter down nz_height data to elevation greater than 3100
+nz_height_3100 <- nz_height %>% 
+  filter(elevation > 3100)
+
+# Create a template using rast(), 
+# Define extent using ext(), resolution and crs of the raster template
+template <- rast(ext(nz_height_3100),
+                 resolution = 3000,
+                 crs = crs(nz_height_3100))
+```
+
+```{r}
+# Convert vector points to raster data
+# Function "length" returns a count of the elevation points per cell
+nz_raster <- rasterize(nz_height_3100, template, field = "elevation", fun = "length")
+
+plot(nz_raster, main = "Number of Elevation Points > 3100 in Each Grid Cell")
+
+plot(st_geometry(nz_height_3100), add = TRUE)
+```
+
+```{r}
+# Find the maximum elevation in each grid cell
+
+nz_raster2 <- rasterize(nz_height_3100, template, field = "elevation", fun = "max")
+
+# Creates initial raster map
+plot(nz_raster2, main = "Maximum Elevation in Each Grid Cell")
+
+# This adds the circles to the raster
+plot(st_geometry(nz_height_3100), add = TRUE)
+```
